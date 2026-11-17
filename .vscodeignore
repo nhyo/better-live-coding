@@ -1,0 +1,16 @@
+**
+!out/src/checkpoints/**
+!out/src/config/**
+!out/src/engine/**
+!out/src/extension/**
+!out/src/presentation/**
+!out/src/utilities/**
+!schemas/**
+!media/icon.png
+!media/sidebar.svg
+!README.md
+!README.zh-CN.md
+!CHANGELOG.md
+!LICENSE
+!SECURITY.md
+!package.json

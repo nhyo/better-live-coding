@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nhyo/better-live-coding/schemas/presentation.schema.json",
+  "title": "Better Live Coding presentation",
+  "description": "Chapters, semantic steps and edit operations for a Better Live Coding presentation. Every Enter runs one step.",
+  "type": "object",
+  "required": ["version", "title", "chapters"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string", "description": "Path or URL of this schema." },
+    "version": { "const": 1, "description": "Configuration format version. Always 1." },
+    "title": { "type": "string", "minLength": 1, "description": "Presentation title shown in the preview panel." },
+    "description": { "type": "string", "description": "Free-form description." },
+    "workspace": { "$ref": "#/definitions/workspace" },
+    "humanMode": { "$ref": "#/definitions/humanMode" },
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Chapters (stages) of the presentation, in teaching order.",
+      "items": { "$ref": "#/definitions/chapter" }
+    }
+  },
+  "definitions": {
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![\\\\/])(?![A-Za-z]:)(?!.*(^|[\\\\/])\\.\\.([\\\\/]|$))[^<>\"|?*\\u0000-\\u001f]+$",
+      "description": "Workspace-relative path using forward slashes. Absolute paths and '..' segments are rejected."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "Identifier made of letters, digits, '.', '_' or '-'. Must be unique."
+    },
+    "pace": {
+      "type": "string",
+      "enum": ["fast", "slow", "auto"],
+      "enumDescriptions": [
+        "Fast typing (default 12–25 ms/char): state, types, HTML, CSS, simple UI.",
+        "Slow typing (default 35–60 ms/char): imports, complete functions, endpoints, core logic.",
+        "Choose automatically: imports, functions and endpoints are slow, everything else is fast."
+      ],
+      "description": "Typing pace in Human Mode."
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Where the presentation runs and where its start and end states live.",
+      "properties": {
+        "workingDirectory": {
+          "$ref": "#/definitions/relativePath",
+          "description": "Directory (relative to the workspace folder) in which files are edited live. Default '.'."
+        },
+        "initialDirectory": {
+          "$ref": "#/definitions/relativePath",
+          "description": "Optional pristine copy of the starting files. When omitted, .better-live-coding/checkpoints/initial.json is used."
+        },
+        "finalDirectory": {
+          "$ref": "#/definitions/relativePath",
+          "description": "Optional directory with the expected final files; Validate Presentation compares the last checkpoint with it."
+        },
+        "files": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/relativePath" },
+          "uniqueItems": true,
+          "description": "Additional declared files (relative to the working directory) to checkpoint even if no step edits them."
+        },
+        "newFileEol": {
+          "type": "string",
+          "enum": ["lf", "crlf"],
+          "description": "Line ending of files created by createFile. Default 'lf'."
+        }
+      }
+    },
+    "humanMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Deterministic Human Mode. Timing values live in VS Code settings (betterLiveCoding.*).",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Set false to always type at the fixed speed. Default true." },
+        "seed": { "type": "string", "description": "Seed for the deterministic rhythm. Same seed = same rhythm in every rehearsal." }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "required": ["id", "title", "steps"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "title": { "type": "string", "minLength": 1, "description": "Chapter title, e.g. 'Upload a file'." },
+        "objective": { "type": "string", "description": "Teaching objective of the chapter." },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Semantic steps. Each Enter runs exactly one step.",
+          "items": { "$ref": "#/definitions/step" }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "title", "operations"],
+      "additionalProperties": false,
+      "description": "One meaningful development unit (a state group, a UI block, a function, an endpoint…). All operations run as one checkpoint transaction.",
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "title": { "type": "string", "minLength": 1, "description": "Step title shown in the status bar and preview." },
+        "objective": { "type": "string", "description": "Teaching objective of the step." },
+        "pace": { "$ref": "#/definitions/pace" },
+        "thinking": { "type": "string", "description": "Text shown as 'Thinking · …' before typing. Defaults to the title." },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Edit operations, executed in order. They may switch between files freely.",
+          "items": { "$ref": "#/definitions/operation" }
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Locates the edit. Text and regex anchors must match exactly once; otherwise the step stops without writing.",
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "description": "Literal text that occurs exactly once (on 'line' when given)." },
+        "regex": { "type": "string", "minLength": 1, "description": "Regular expression that matches exactly once." },
+        "flags": { "type": "string", "pattern": "^[imsu]*$", "description": "Regex flags: i, m, s, u." },
+        "line": { "type": "integer", "minimum": 1, "description": "1-based line. Alone it is a position; with text/regex it restricts the search to this line." },
+        "column": { "type": "integer", "minimum": 1, "description": "1-based column (requires line)." },
+        "endLine": { "type": "integer", "minimum": 1, "description": "1-based end line of a line/column range." },
+        "endColumn": { "type": "integer", "minimum": 1, "description": "1-based end column of a line/column range." }
+      },
+      "anyOf": [{ "required": ["text"] }, { "required": ["regex"] }, { "required": ["line"] }],
+      "not": { "required": ["text", "regex"] },
+      "dependencies": {
+        "column": ["line"],
+        "endLine": ["endColumn"],
+        "endColumn": ["endLine"]
+      }
+    },
+    "text": {
+      "description": "Text to type. Use a string, or an array of lines joined with newlines (LF; CRLF documents get CRLF).",
+      "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }]
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Native VS Code hints shown while typing. Completions are only displayed, never accepted.",
+      "properties": {
+        "auto": { "type": "boolean", "description": "Show IntelliSense after 'identifier.' and parameter hints after 'identifier('. Default true." },
+        "suggestAfter": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Show IntelliSense briefly after typing any of these substrings, e.g. 'request.' or 'Resp'." },
+        "parameterHintsAfter": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Show parameter hints after typing any of these substrings, e.g. 'handleUpload('." }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "required": ["type", "file"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "What the operation does. Text edits are typed character by character; only replaceFile is instant.",
+          "enum": ["insertBefore", "insertAfter", "replace", "delete", "createFile", "deleteFile", "moveCursor", "selectRange", "openFile", "replaceFile"],
+          "enumDescriptions": [
+            "Type text immediately before the anchor.",
+            "Type text immediately after the anchor.",
+            "Select the anchor, remove it and type the replacement.",
+            "Select the anchor and remove it.",
+            "Create a new empty file and type its text.",
+            "Delete a declared file.",
+            "Move the cursor to the anchor (start, or end with cursor: 'end').",
+            "Select the anchor range.",
+            "Open the file (and optionally reveal an anchor).",
+            "Replace the whole file instantly. Only allowed with transient: true (restore/skip helpers), never for normal animation."
+          ]
+        },
+        "file": { "$ref": "#/definitions/relativePath", "description": "Target file, relative to workspace.workingDirectory." },
+        "label": { "type": "string", "description": "Short description used in the status bar and errors." },
+        "anchor": { "$ref": "#/definitions/anchor" },
+        "text": { "$ref": "#/definitions/text" },
+        "expectBefore": { "type": "string", "description": "Text that must exist in the file before this operation." },
+        "expectAfter": { "type": "string", "description": "Text that must exist in the file after this operation." },
+        "pace": { "$ref": "#/definitions/pace" },
+        "thinking": { "type": "string", "description": "Status-bar thought shown before this operation types." },
+        "effects": { "$ref": "#/definitions/effects" },
+        "scroll": {
+          "type": "string",
+          "enum": ["center", "centerIfOutside", "top", "minimal", "none"],
+          "description": "How the editor scrolls to the edit. Default centerIfOutside."
+        },
+        "cursor": { "type": "string", "enum": ["start", "end"], "description": "moveCursor target within the anchor. Default start." },
+        "transient": { "type": "boolean", "description": "Declares an instant, non-animated change. Required for replaceFile." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["insertBefore", "insertAfter", "replace", "delete", "moveCursor", "selectRange"] } } },
+          "then": { "required": ["anchor"] }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["insertBefore", "insertAfter", "replace", "replaceFile"] } } },
+          "then": { "required": ["text"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "replaceFile" } } },
+          "then": { "required": ["transient"], "properties": { "transient": { "const": true } } }
+        }
+      ]
+    }
+  }
+}

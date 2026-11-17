@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  test:
+    name: Core tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run compile
+      - name: Unit tests
+        run: npm test
+      - name: Validate JSON Schema and examples against it
+        run: npm run validate:schema
+      - name: Validate all example presentations (dry run + final directory)
+        run: npm run validate:examples
+      - name: Full replay, LF
+        run: |
+          node scripts/replay-example.js examples/basic-typescript --eol=lf --scenario
+          node scripts/replay-example.js examples/vercel-blob --eol=lf --scenario
+      - name: Full replay, CRLF
+        run: |
+          node scripts/replay-example.js examples/basic-typescript --eol=crlf
+          node scripts/replay-example.js examples/vercel-blob --eol=crlf
+      - name: Secret scan
+        run: npm run scan
+
+  integration:
+    name: VS Code integration (${{ matrix.os }})
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run compile
+      - name: Run extension host tests (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a node out/test/integration/runTest.js
+      - name: Run extension host tests (Windows)
+        if: runner.os == 'Windows'
+        run: node out/test/integration/runTest.js
+
+  package:
+    name: Package VSIX
+    needs: [test, integration]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run package
+      - name: Scan the VSIX
+        run: node scripts/scan-secrets.js --vsix better-live-coding-*.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: better-live-coding-*.vsix
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: vsix
+      - name: Check that the tag matches package.json
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          test "v${version}" = "${GITHUB_REF_NAME}"
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          notes="docs/releases/${GITHUB_REF_NAME}.md"
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" better-live-coding-*.vsix --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" better-live-coding-*.vsix \
+              --title "Better Live Coding ${GITHUB_REF_NAME}" \
+              --notes-file "${notes}"
+          fi

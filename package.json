@@ -1,0 +1,296 @@
+{
+  "name": "better-live-coding",
+  "displayName": "Better Live Coding",
+  "description": "Configurable, deterministic live-coding presentations for VS Code: semantic steps, Human Mode typing, multi-file demos and checkpoints.",
+  "version": "1.0.0",
+  "publisher": "better-live-coding",
+  "license": "MIT",
+  "author": "nhyo",
+  "homepage": "https://github.com/nhyo/better-live-coding#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nhyo/better-live-coding.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nhyo/better-live-coding/issues"
+  },
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e2e",
+    "theme": "dark"
+  },
+  "keywords": [
+    "live coding",
+    "presentation",
+    "demo",
+    "teaching",
+    "typing animation",
+    "workshop"
+  ],
+  "engines": {
+    "vscode": "^1.90.0",
+    "node": ">=20"
+  },
+  "categories": [
+    "Education",
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:.better-live-coding/presentation.json"
+  ],
+  "main": "./out/src/extension/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "betterLiveCoding.initialize",
+        "title": "Initialize Presentation",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.start",
+        "title": "Start Presentation Mode",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.nextStep",
+        "title": "Run Next Step",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.pauseResume",
+        "title": "Pause or Resume",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.skip",
+        "title": "Skip Current Animation",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.restartStep",
+        "title": "Restart Current Step",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.restartAll",
+        "title": "Restart from Initial Checkpoint",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.restoreCheckpoint",
+        "title": "Restore Checkpoint",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.validate",
+        "title": "Validate Presentation",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.previewSteps",
+        "title": "Preview Steps",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.generateCheckpoints",
+        "title": "Generate Checkpoints",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.generateCandidates",
+        "title": "Generate Candidate Operations from Two Directories",
+        "category": "Better Live Coding"
+      },
+      {
+        "command": "betterLiveCoding.exit",
+        "title": "Exit Presentation Mode",
+        "category": "Better Live Coding"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "betterLiveCoding.nextStep",
+        "key": "enter",
+        "when": "betterLiveCoding.presentationMode && !betterLiveCoding.running && editorTextFocus && !terminalFocus && !suggestWidgetVisible && !parameterHintsVisible && !inSnippetMode && !renameInputVisible && !inlineSuggestionVisible && !findWidgetVisible"
+      },
+      {
+        "command": "betterLiveCoding.nextStep",
+        "key": "enter",
+        "when": "betterLiveCoding.presentationMode && betterLiveCoding.running && editorTextFocus && !terminalFocus"
+      },
+      {
+        "command": "betterLiveCoding.pauseResume",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "betterLiveCoding.presentationMode"
+      },
+      {
+        "command": "betterLiveCoding.skip",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
+        "when": "betterLiveCoding.presentationMode"
+      },
+      {
+        "command": "betterLiveCoding.restartStep",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "betterLiveCoding.presentationMode"
+      },
+      {
+        "command": "betterLiveCoding.exit",
+        "key": "ctrl+alt+q",
+        "mac": "cmd+alt+q",
+        "when": "betterLiveCoding.presentationMode"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "betterLiveCoding",
+          "title": "Better Live Coding",
+          "icon": "media/sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "betterLiveCoding": [
+        {
+          "type": "webview",
+          "id": "betterLiveCoding.preview",
+          "name": "Steps"
+        }
+      ]
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "**/.better-live-coding/presentation.json",
+        "url": "./schemas/presentation.schema.json"
+      }
+    ],
+    "configuration": {
+      "title": "Better Live Coding",
+      "properties": {
+        "betterLiveCoding.presentationFile": {
+          "type": "string",
+          "default": ".better-live-coding/presentation.json",
+          "markdownDescription": "Workspace-relative path of the presentation file."
+        },
+        "betterLiveCoding.humanMode": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Deterministic human-like rhythm: per-character variation, punctuation and line pauses, thinking pauses and natural file switches. Disable for a fixed typing speed. A presentation can also turn it off with `humanMode.enabled: false`."
+        },
+        "betterLiveCoding.fixedTypingDelayMs": {
+          "type": "number",
+          "default": 28,
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Per-character delay when Human Mode is off."
+        },
+        "betterLiveCoding.fastTypingDelayMinMs": {
+          "type": "number",
+          "default": 12,
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Fast pace minimum delay per character (state, types, HTML, CSS, simple UI)."
+        },
+        "betterLiveCoding.fastTypingDelayMaxMs": {
+          "type": "number",
+          "default": 25,
+          "minimum": 0,
+          "maximum": 250,
+          "description": "Fast pace maximum delay per character."
+        },
+        "betterLiveCoding.slowTypingDelayMinMs": {
+          "type": "number",
+          "default": 35,
+          "minimum": 0,
+          "maximum": 300,
+          "description": "Slow pace minimum delay per character (imports, functions, endpoints, core logic)."
+        },
+        "betterLiveCoding.slowTypingDelayMaxMs": {
+          "type": "number",
+          "default": 60,
+          "minimum": 0,
+          "maximum": 400,
+          "description": "Slow pace maximum delay per character."
+        },
+        "betterLiveCoding.punctuationPauseMs": {
+          "type": "number",
+          "default": 90,
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Extra pause after punctuation (scaled down for fast pace)."
+        },
+        "betterLiveCoding.linePauseMs": {
+          "type": "number",
+          "default": 180,
+          "minimum": 0,
+          "maximum": 2000,
+          "description": "Extra pause after a line break."
+        },
+        "betterLiveCoding.blankLinePauseMs": {
+          "type": "number",
+          "default": 550,
+          "minimum": 0,
+          "maximum": 3000,
+          "description": "Extra pause after a blank line."
+        },
+        "betterLiveCoding.blockEndPauseMs": {
+          "type": "number",
+          "default": 400,
+          "minimum": 0,
+          "maximum": 3000,
+          "description": "Pause after a closing block and after each completed operation."
+        },
+        "betterLiveCoding.fileSwitchPauseMs": {
+          "type": "number",
+          "default": 700,
+          "minimum": 0,
+          "maximum": 3000,
+          "description": "Pause after switching to another file."
+        },
+        "betterLiveCoding.thinkingPauseMs": {
+          "type": "number",
+          "default": 500,
+          "minimum": 0,
+          "maximum": 3000,
+          "description": "Pause after revealing the edit location, while the status bar shows `Thinking · …`."
+        },
+        "betterLiveCoding.suggestionVisibleMs": {
+          "type": "number",
+          "default": 420,
+          "minimum": 0,
+          "maximum": 3000,
+          "description": "How long IntelliSense / parameter hints stay visible before typing continues."
+        },
+        "betterLiveCoding.editorEffects": {
+          "type": "boolean",
+          "default": true,
+          "description": "Trigger IntelliSense after `identifier.` and parameter hints after `identifier(` while typing. Candidates are only shown, never accepted."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -p . --watch",
+    "pretest": "npm run compile",
+    "test": "node --test out/test/*.test.js",
+    "test:integration": "npm run compile && node out/test/integration/runTest.js",
+    "validate:schema": "node scripts/validate-schema.js",
+    "validate:examples": "node scripts/validate-examples.js",
+    "replay": "node scripts/replay-example.js",
+    "scan": "node scripts/scan-secrets.js",
+    "package": "vsce package --no-dependencies",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/vscode": "~1.90.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.2.0",
+    "ajv": "^8.17.1",
+    "typescript": "^5.6.3"
+  }
+}

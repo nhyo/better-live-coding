@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.png binary
+# Example fixtures that intentionally use Windows line endings
+examples/vercel-blob/initial/** text eol=crlf
+examples/vercel-blob/final/** text eol=crlf
+examples/basic-typescript/initial/src/crlf/** text eol=crlf
+examples/basic-typescript/final/src/crlf/** text eol=crlf

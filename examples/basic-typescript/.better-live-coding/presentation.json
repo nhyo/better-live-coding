@@ -1,0 +1,261 @@
+{
+  "$schema": "../../../schemas/presentation.schema.json",
+  "version": 1,
+  "title": "Basic TypeScript Cart",
+  "description": "A small multi-file TypeScript demo: state, functions, non-linear file switching, error handling, a CRLF file and cleanup.",
+  "workspace": {
+    "workingDirectory": "practice",
+    "initialDirectory": "initial",
+    "finalDirectory": "final",
+    "newFileEol": "lf"
+  },
+  "humanMode": {
+    "enabled": true,
+    "seed": "basic-typescript"
+  },
+  "chapters": [
+    {
+      "id": "cart",
+      "title": "Cart state and behaviour",
+      "objective": "Model the cart and give it two complete functions",
+      "steps": [
+        {
+          "id": "cart-state",
+          "title": "Define the cart state",
+          "objective": "Keep the items and the last error message together",
+          "operations": [
+            {
+              "type": "replace",
+              "file": "src/cart.ts",
+              "label": "cart state",
+              "anchor": { "text": "// TODO: cart state" },
+              "text": ["const items: CartItem[] = [];", "let lastError = '';"]
+            }
+          ]
+        },
+        {
+          "id": "add-item",
+          "title": "Implement addItem()",
+          "objective": "Write one complete function that mutates the cart",
+          "operations": [
+            {
+              "type": "replace",
+              "file": "src/cart.ts",
+              "label": "addItem function",
+              "anchor": { "text": "// TODO: addItem" },
+              "effects": { "suggestAfter": ["items."] },
+              "text": [
+                "export function addItem(name: string, priceCents: number, quantity = 1): void {",
+                "  items.push({ name, priceCents, quantity });",
+                "}"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "total",
+          "title": "Implement totalCents()",
+          "objective": "Derive the total from the state",
+          "operations": [
+            {
+              "type": "replace",
+              "file": "src/cart.ts",
+              "label": "totalCents function",
+              "anchor": { "text": "// TODO: totalCents" },
+              "text": [
+                "export function totalCents(): number {",
+                "  return items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);",
+                "}"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "title": "Use the cart across files",
+      "objective": "Write the calling code first, then add a new module and come back",
+      "steps": [
+        {
+          "id": "use-cart",
+          "title": "Call the cart from main.ts",
+          "objective": "Import the functions and use them",
+          "thinking": "Switch to main.ts and wire the cart in",
+          "operations": [
+            {
+              "type": "insertAfter",
+              "file": "src/main.ts",
+              "label": "import cart functions",
+              "anchor": { "text": "import { formatPrice } from './format';" },
+              "text": "\nimport { addItem, totalCents } from './cart';"
+            },
+            {
+              "type": "replace",
+              "file": "src/main.ts",
+              "label": "add two items",
+              "anchor": { "text": "// TODO: use the cart" },
+              "text": ["addItem('Notebook', 450, 2);", "addItem('Pen', 120);"]
+            },
+            {
+              "type": "replace",
+              "file": "src/main.ts",
+              "label": "print the total",
+              "anchor": { "text": "formatPrice(0)" },
+              "effects": { "parameterHintsAfter": ["formatPrice("] },
+              "text": "formatPrice(totalCents())"
+            }
+          ]
+        },
+        {
+          "id": "receipt",
+          "title": "Create a receipt module and use it",
+          "objective": "Create a new file, then return to main.ts",
+          "operations": [
+            {
+              "type": "createFile",
+              "file": "src/receipt.ts",
+              "label": "receipt module",
+              "text": [
+                "import { formatPrice } from './format';",
+                "",
+                "export function receiptLine(name: string, cents: number): string {",
+                "  return `${name.padEnd(12, '.')} ${formatPrice(cents)}`;",
+                "}",
+                ""
+              ]
+            },
+            {
+              "type": "insertAfter",
+              "file": "src/main.ts",
+              "label": "import receiptLine",
+              "anchor": { "text": "import { addItem, totalCents } from './cart';" },
+              "text": "\nimport { receiptLine } from './receipt';"
+            },
+            {
+              "type": "replace",
+              "file": "src/main.ts",
+              "label": "print a receipt line",
+              "anchor": { "text": "console.log(formatPrice(totalCents()));" },
+              "pace": "fast",
+              "text": "console.log(receiptLine('Total', totalCents()));"
+            },
+            {
+              "type": "delete",
+              "file": "src/main.ts",
+              "label": "remove the unused import",
+              "anchor": { "text": "import { formatPrice } from './format';\n" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "errors",
+      "title": "Validation, discounts and cleanup",
+      "objective": "Add error handling last, edit a CRLF file and clean up",
+      "steps": [
+        {
+          "id": "validation",
+          "title": "Validate input and report errors",
+          "objective": "Go back to cart.ts for validation, then handle the error in main.ts",
+          "operations": [
+            {
+              "type": "insertAfter",
+              "file": "src/cart.ts",
+              "label": "validate quantity",
+              "anchor": { "text": "export function addItem(name: string, priceCents: number, quantity = 1): void {" },
+              "pace": "slow",
+              "text": [
+                "",
+                "  if (quantity <= 0 || !Number.isInteger(quantity)) {",
+                "    lastError = `Invalid quantity for ${name}`;",
+                "    throw new Error(lastError);",
+                "  }"
+              ]
+            },
+            {
+              "type": "insertAfter",
+              "file": "src/cart.ts",
+              "label": "getLastError function",
+              "anchor": { "text": "  return items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);\n}" },
+              "text": ["", "", "export function getLastError(): string {", "  return lastError;", "}"]
+            },
+            {
+              "type": "replace",
+              "file": "src/main.ts",
+              "label": "handle the error",
+              "anchor": { "text": "addItem('Pen', 120);" },
+              "pace": "slow",
+              "effects": { "suggestAfter": ["console."] },
+              "text": [
+                "addItem('Pen', 120);",
+                "",
+                "try {",
+                "  addItem('Broken', 100, 0);",
+                "} catch (error) {",
+                "  console.error(error instanceof Error ? error.message : error);",
+                "}"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "legacy-discount",
+          "title": "Apply the legacy discount",
+          "objective": "Edit a CRLF file and use it from cart.ts",
+          "operations": [
+            {
+              "type": "selectRange",
+              "file": "src/crlf/legacy.ts",
+              "label": "show the discount",
+              "thinking": "The legacy discount is still zero",
+              "anchor": { "text": "= 0;", "line": 2 }
+            },
+            {
+              "type": "replace",
+              "file": "src/crlf/legacy.ts",
+              "label": "set the discount",
+              "anchor": { "text": "= 0;", "line": 2 },
+              "text": "= 10;"
+            },
+            {
+              "type": "insertAfter",
+              "file": "src/cart.ts",
+              "label": "import the discount",
+              "anchor": { "text": "// Shopping cart for the Better Live Coding basic example." },
+              "text": "\nimport { LEGACY_DISCOUNT_PERCENT } from './crlf/legacy';\n"
+            },
+            {
+              "type": "replace",
+              "file": "src/cart.ts",
+              "label": "apply the discount",
+              "anchor": { "regex": "return items\\.reduce\\([^\\n]*\\);" },
+              "pace": "slow",
+              "text": [
+                "const subtotal = items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);",
+                "  return Math.round(subtotal * (1 - LEGACY_DISCOUNT_PERCENT / 100));"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cleanup",
+          "title": "Remove the scratch file",
+          "objective": "Delete a file and finish with the cursor on the result",
+          "operations": [
+            { "type": "openFile", "file": "src/scratch.ts", "label": "look at the scratch file" },
+            { "type": "deleteFile", "file": "src/scratch.ts", "label": "delete the scratch file" },
+            {
+              "type": "moveCursor",
+              "file": "src/main.ts",
+              "label": "end on the receipt",
+              "anchor": { "text": "receiptLine('Total', totalCents())" },
+              "cursor": "end"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
