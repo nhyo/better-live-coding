@@ -19,14 +19,14 @@ import { PAGE_START, SERVER_START, nonLinearPresentation, readTree, tempDir, wri
 test('declared files are the union of operation targets and workspace.files', () => {
   const definition = nonLinearPresentation();
   definition.workspace = { files: ['README.md'] };
-  assert.deepEqual(declaredFiles(definition), ['README.md', 'page.svelte', 'server.ts']);
+  assert.deepEqual(declaredFiles(definition), ['README.md', 'page.html', 'server.ts']);
 });
 
 test('initial and per-step checkpoints are built and recognised', () => {
-  const set = buildCheckpoints(nonLinearPresentation(), { 'page.svelte': PAGE_START, 'server.ts': SERVER_START }, {});
+  const set = buildCheckpoints(nonLinearPresentation(), { 'page.html': PAGE_START, 'server.ts': SERVER_START }, {});
   assert.equal(set.states.length, 6);
   for (let index = 0; index < set.states.length; index += 1) assert.equal(identifyCheckpoint(set.states[index], set), index);
-  assert.equal(identifyCheckpoint({ 'page.svelte': 'garbage', 'server.ts': SERVER_START }, set), -1);
+  assert.equal(identifyCheckpoint({ 'page.html': 'garbage', 'server.ts': SERVER_START }, set), -1);
   // CRLF content is recognised (line endings are normalised).
   const crlf = Object.fromEntries(Object.entries(set.states[3]).map(([file, text]) => [file, text!.replace(/\n/g, '\r\n')]));
   assert.equal(identifyCheckpoint(crlf, set), 3);
@@ -34,15 +34,15 @@ test('initial and per-step checkpoints are built and recognised', () => {
 
 test('identical checkpoints prefer the saved index', () => {
   const definition = nonLinearPresentation();
-  definition.chapters[0].steps.splice(1, 0, { id: 'look', title: 'Look', operations: [{ type: 'moveCursor', file: 'page.svelte', anchor: { text: '<main>' } }] });
-  const set = buildCheckpoints(definition, { 'page.svelte': PAGE_START, 'server.ts': SERVER_START }, {});
+  definition.chapters[0].steps.splice(1, 0, { id: 'look', title: 'Look', operations: [{ type: 'moveCursor', file: 'page.html', anchor: { text: '<main>' } }] });
+  const set = buildCheckpoints(definition, { 'page.html': PAGE_START, 'server.ts': SERVER_START }, {});
   assert.equal(identifyCheckpoint(set.states[1], set), 1);
   assert.equal(identifyCheckpoint(set.states[1], set, 2), 2);
 });
 
 test('manifest hashes identify a checkpoint without rebuilding', () => {
   const definition = nonLinearPresentation();
-  const set = buildCheckpoints(definition, { 'page.svelte': PAGE_START, 'server.ts': SERVER_START }, {});
+  const set = buildCheckpoints(definition, { 'page.html': PAGE_START, 'server.ts': SERVER_START }, {});
   const manifest = createManifest(definition, set);
   assert.equal(manifest.checkpoints.length, 6);
   assert.equal(identifyByManifest(set.states[4], manifest), 4);
@@ -79,9 +79,9 @@ test('Generate Checkpoints writes relative paths only and no secrets', async () 
   definition.workspace = { workingDirectory: 'work' };
   writeTree(root, {
     '.better-live-coding/presentation.json': JSON.stringify(definition),
-    'work/page.svelte': PAGE_START,
+    'work/page.html': PAGE_START,
     'work/server.ts': SERVER_START.replace(/\n/g, '\r\n'),
-    'work/.env.local': 'BLOB_READ_WRITE_TOKEN=vercel_blob_rw_secret'
+    'work/.env.local': 'API_TOKEN=secret'
   });
   const result = await generateCheckpointFiles(root, { capture: true });
   assert.equal(result.ok, true, JSON.stringify(result.diagnostics));

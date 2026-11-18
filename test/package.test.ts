@@ -77,12 +77,11 @@ function walk(folder: string): string[] {
 }
 
 test('runtime code does not hard-code any project-specific content', () => {
-  const forbidden = [/\bfinial\b/i, /\bpractice\b/i, /vercel/i, /sveltekit/i, /\bblob\b/i, /tech[- ]?share/i, /CSCI/i, /\+page\.svelte/, /\+server\.ts/, /\bdemo\/src\b/, /TODO: Add/];
+  const forbidden = [/cart.ts/, /formatPrice/, /legacy-discount/, /finial/i, /TODO: Add/];
   const sources = walk(path.join(ROOT, 'src')).filter((file) => file.endsWith('.ts'));
   assert.ok(sources.length > 10);
   for (const file of sources) {
-    // The generic deny-list of deployment CLI credential folders (".vercel", ".netlify") is security logic, not demo content.
-    const content = fs.readFileSync(file, 'utf8').replace(/'\.vercel',/g, '');
+    const content = fs.readFileSync(file, 'utf8');
     for (const pattern of forbidden) assert.ok(!pattern.test(content), `${path.relative(ROOT, file)} contains ${pattern}`);
   }
 });

@@ -24,7 +24,6 @@ const CONTENT_RULES = [
   ['Cookie header', /^\s*(set-)?cookie:\s*\S+=\S+/im],
   ['Windows user path', /[A-Za-z]:[\\/]+Users[\\/]+(?!runneradmin)[^\\/\s"'`]+[\\/]/i],
   ['Local desktop path', /[A-Za-z]:[\\/]+DESK[\\/]/i],
-  ['Course path', /CSCI[ _-]?5117/i],
   ['POSIX home path', /\/(home|Users)\/(?!runner\b)[a-z][a-z0-9_-]+\//]
 ];
 const FILE_RULES = [/(^|\/)\.env(\.|$)/, /\.(pem|key|p12|pfx)$/i, /(^|\/)cookies?(\.txt|\.json)?$/i, /(^|\/)\.npmrc$/, /(^|\/)\.git-credentials$/, /(^|\/)node_modules\//];
@@ -46,7 +45,7 @@ function scanText(name, text, findings) {
     const match = text.match(pattern);
     if (!match) continue;
     // Test fixtures deliberately use fake, obviously-invalid values.
-    if (/never-read-me|vercel_blob_rw_secret|SECRET_TOKEN=abc|TOKEN=secret/.test(match[0])) continue;
+    if (/never-read-me|SECRET_TOKEN=abc|TOKEN=secret/.test(match[0])) continue;
     if (label === 'Windows user path' && /runneradmin/.test(match[0])) continue;
     findings.push(`${name}: ${label} → ${match[0].slice(0, 40)}${match[0].length > 40 ? '…' : ''}`);
   }

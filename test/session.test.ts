@@ -6,7 +6,7 @@ import { MemoryHost, VirtualClock } from '../src/testing/hosts';
 import { resolvePacing } from '../src/engine/pacing';
 import { PAGE_START, SERVER_START, MemoryStore, makeSession, nonLinearPresentation, presentation } from './helpers';
 
-const startFiles = () => ({ 'page.svelte': PAGE_START, 'server.ts': SERVER_START });
+const startFiles = () => ({ 'page.html': PAGE_START, 'server.ts': SERVER_START });
 
 test('each Enter runs exactly one semantic step and verifies its checkpoint', async () => {
   const { session, host, checkpoints } = makeSession(nonLinearPresentation(), startFiles());
@@ -35,12 +35,12 @@ test('the next file opens only after Enter, never in advance', async () => {
     const lastEvent = host.events.filter((event) => event.type !== 'status').at(-1);
     assert.notEqual(lastEvent?.type, 'open');
   }
-  // Step 4 ("backend") switched to server.ts; page.svelte is not reopened until the next Enter.
+  // Step 4 ("backend") switched to server.ts; page.html is not reopened until the next Enter.
   assert.equal(host.activeFile(), 'server.ts');
   const before = host.events.length;
   await session.next();
   const opens = host.events.slice(before).filter((event) => event.type === 'open').map((event) => event.file);
-  assert.deepEqual(opens, ['page.svelte']);
+  assert.deepEqual(opens, ['page.html']);
 });
 
 test('pause stops typing; resume continues at the exact position', async () => {
@@ -60,10 +60,10 @@ test('pause stops typing; resume continues at the exact position', async () => {
   clock.onSleep = () => {
     if (!session.machine.paused) return;
     pauseSleeps += 1;
-    if (pauseSleeps === 1) snapshot = host.documents.get('page.svelte')!.raw;
+    if (pauseSleeps === 1) snapshot = host.documents.get('page.html')!.raw;
     if (pauseSleeps === 40) {
       // Nothing changed while paused.
-      assert.equal(host.documents.get('page.svelte')!.raw, snapshot);
+      assert.equal(host.documents.get('page.html')!.raw, snapshot);
       session.togglePause();
     }
   };
@@ -71,7 +71,7 @@ test('pause stops typing; resume continues at the exact position', async () => {
   assert.equal(result.status, 'completed');
   assert.equal(pausedInserts, 0);
   assert.ok(pauseSleeps >= 40);
-  assert.equal(host.diskText('page.svelte'), checkpoints.states[1]['page.svelte']);
+  assert.equal(host.diskText('page.html'), checkpoints.states[1]['page.html']);
   assert.ok(host.statuses.some((status) => status.startsWith('Paused')));
 });
 
@@ -106,16 +106,16 @@ test('restart rolls back to the step start and runs the step again', async () =>
   assert.equal((await restart).status, 'completed');
   host.beforeInsert = undefined;
   assert.equal(session.machine.completedSteps, 2);
-  assert.equal(host.diskText('page.svelte'), checkpoints.states[2]['page.svelte']);
+  assert.equal(host.diskText('page.html'), checkpoints.states[2]['page.html']);
 });
 
 test('restore writes only declared files and never touches others', async () => {
   const files = { ...startFiles(), '.env.local': 'SECRET_TOKEN=abc', 'notes.md': '# untouched' };
   const { session, host, checkpoints } = makeSession(nonLinearPresentation(), files);
-  assert.deepEqual(checkpoints.files, ['page.svelte', 'server.ts']);
+  assert.deepEqual(checkpoints.files, ['page.html', 'server.ts']);
   for (let index = 0; index < 5; index += 1) await session.next();
   const changed = await session.restore(0);
-  assert.deepEqual(changed.sort(), ['page.svelte', 'server.ts']);
+  assert.deepEqual(changed.sort(), ['page.html', 'server.ts']);
   assert.equal(host.disk.get('.env.local'), 'SECRET_TOKEN=abc');
   assert.equal(host.disk.get('notes.md'), '# untouched');
   assert.ok(!host.events.some((event) => event.file === '.env.local' || event.file === 'notes.md'));
@@ -144,7 +144,7 @@ test('an edit that drifts during a step stops it instead of writing into the wro
   let inserts = 0;
   host.beforeInsert = (file) => {
     inserts += 1;
-    // While the step types in server.ts, someone edits page.svelte... and server.ts drifts too.
+    // While the step types in server.ts, someone edits page.html... and server.ts drifts too.
     if (inserts === 2 && file === 'server.ts') host.externalEdit('server.ts', 'x');
   };
   const result = await session.next();
@@ -260,17 +260,17 @@ test('thinking status, selection before replace and cursor before insert', async
 });
 
 test('LF and CRLF documents keep their line endings through animation and restore', async () => {
-  const crlf = { 'page.svelte': PAGE_START.replace(/\n/g, '\r\n'), 'server.ts': SERVER_START };
+  const crlf = { 'page.html': PAGE_START.replace(/\n/g, '\r\n'), 'server.ts': SERVER_START };
   const { session, host, checkpoints } = makeSession(nonLinearPresentation(), crlf);
   for (let index = 0; index < 5; index += 1) assert.equal((await session.next()).status, 'completed');
-  const page = host.disk.get('page.svelte')!;
+  const page = host.disk.get('page.html')!;
   assert.ok(page.includes('\r\n'));
   assert.ok(!/[^\r]\n/.test(page), 'no bare LF in the CRLF document');
   assert.ok(!host.disk.get('server.ts')!.includes('\r'), 'LF document stays LF');
   await session.restore(2);
-  const restored = host.disk.get('page.svelte')!;
+  const restored = host.disk.get('page.html')!;
   assert.ok(!/[^\r]\n/.test(restored));
-  assert.equal(normalizeEol(restored), checkpoints.states[2]['page.svelte']);
+  assert.equal(normalizeEol(restored), checkpoints.states[2]['page.html']);
 });
 
 test('createFile uses the configured EOL; deleteFile removes only the declared file', async () => {
@@ -314,7 +314,7 @@ test('exit during a step rolls back to its start checkpoint and stops typing', a
   const result = await session.next();
   assert.equal(result.status, 'aborted');
   assert.equal(afterExit, 0);
-  assert.equal(host.diskText('page.svelte'), checkpoints.states[0]['page.svelte']);
+  assert.equal(host.diskText('page.html'), checkpoints.states[0]['page.html']);
 });
 
 test('fixed-speed mode (Human Mode off) still produces identical results', async () => {
@@ -322,7 +322,7 @@ test('fixed-speed mode (Human Mode off) still produces identical results', async
   const clock = new VirtualClock();
   const { session, host, checkpoints } = makeSession(nonLinearPresentation(), startFiles(), { settings, clock });
   for (let index = 0; index < 5; index += 1) await session.next();
-  assert.equal(host.diskText('page.svelte'), checkpoints.states[5]['page.svelte']);
+  assert.equal(host.diskText('page.html'), checkpoints.states[5]['page.html']);
   assert.ok(clock.now < 20000);
 });
 

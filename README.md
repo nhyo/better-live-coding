@@ -3,14 +3,11 @@
 **English** · [简体中文](README.zh-CN.md)
 
 Better Live Coding turns any project into a **deterministic, rehearsable live-coding presentation inside VS Code**.
-You describe chapters and *semantic steps* in a JSON file; during the talk every **Enter** types the next step into
+You describe chapters and *semantic steps* in a JSON file; while presenting, every **Enter** types the next step into
 real editors — with syntax highlighting, diagnostics, IntelliSense and parameter hints — across as many files as you
 need, in the order a real developer would write them. Checkpoints let you skip, restart and recover at any moment.
 
-It is technology-independent: nothing about a framework, a course or a file layout is built into the extension.
-
-> **Screenshots / GIF.** A short recording of a step running (status bar `Stage 2 · Step 3/6`, the `Thinking · …`
-> pause, a file switch and IntelliSense) belongs here. See [docs/media.md](docs/media.md) for how to record one.
+It is technology-independent: no framework or file layout is built into the extension.
 
 ## Features
 
@@ -74,7 +71,7 @@ To try it without writing anything, open [`examples/basic-typescript`](examples/
     "finalDirectory": "solution",     // optional expected end state (validation)
     "newFileEol": "lf"                // line ending for createFile
   },
-  "humanMode": { "enabled": true, "seed": "my-talk" },
+  "humanMode": { "enabled": true, "seed": "my-presentation" },
   "chapters": [
     {
       "id": "upload",
@@ -87,15 +84,15 @@ To try it without writing anything, open [`examples/basic-typescript`](examples/
           "operations": [
             {
               "type": "insertBefore",
-              "file": "src/App.svelte",
-              "anchor": { "text": "</script>" },
+              "file": "src/app.ts",
+              "anchor": { "text": "// upload" },
               "pace": "slow",
               "effects": { "suggestAfter": ["response."] },
               "text": [
-                "  async function upload(file: File) {",
-                "    const response = await fetch('/api/upload', { method: 'POST', body: file });",
-                "    url = (await response.json()).url;",
-                "  }",
+                "async function upload(file: File) {",
+                "  const response = await fetch('/api/upload', { method: 'POST', body: file });",
+                "  url = (await response.json()).url;",
+                "}",
                 ""
               ]
             }
@@ -227,10 +224,6 @@ semantic steps and order them yourself.
 | Example | Shows |
 | --- | --- |
 | [`examples/basic-typescript`](examples/basic-typescript) | variables, functions, multiple files, a created and a deleted file, error handling added last, a CRLF file, Human Mode, checkpoint restore |
-| [`examples/vercel-blob`](examples/vercel-blob) | file selection, client upload, token endpoint, gallery, delete, frontend↔backend switching, fast and slow pace, IntelliSense trigger points, CRLF, 15 semantic steps |
-
-The Vercel Blob example contains no credentials; you need your own Blob store and token in an `.env.local` that the
-extension never reads.
 
 ## FAQ
 
@@ -254,7 +247,7 @@ npm run compile
 npm test                      # unit tests (node:test)
 npm run validate:schema       # Ajv strict compile + examples against the schema
 npm run validate:examples     # full Validate Presentation on every example
-npm run replay -- examples/vercel-blob --scenario   # headless full replay with Human Mode timing
+npm run replay -- examples/basic-typescript --scenario   # headless full replay with Human Mode timing
 npm run test:integration      # real VS Code extension host (downloads VS Code unless VSCODE_EXECUTABLE is set)
 npm run scan                  # secret / local-path scan
 npm run package               # build the VSIX

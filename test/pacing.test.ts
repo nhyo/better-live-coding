@@ -55,13 +55,13 @@ test('custom ranges are honoured and clamped', () => {
 });
 
 test('imports use the slow pace', () => {
-  assert.equal(resolvePace(text("import { upload } from '@vercel/blob/client';")), 'slow');
+  assert.equal(resolvePace(text("import { upload } from './client';")), 'slow');
   assert.equal(resolvePace(text("const fs = require('node:fs');")), 'slow');
   assert.equal(classifyText("\n  import { x } from './x';").reason, 'import');
 });
 
 test('functions use the slow pace', () => {
-  assert.equal(resolvePace(text('async function uploadImage() {\n  return 1;\n}')), 'slow');
+  assert.equal(resolvePace(text('async function saveItem() {\n  return 1;\n}')), 'slow');
   assert.equal(resolvePace(text('const handler = async (event) => {\n};')), 'slow');
   assert.equal(classifyText('export function totalCents(): number {\n}').reason, 'function');
 });
@@ -73,11 +73,11 @@ test('backend endpoints use the slow pace', () => {
 });
 
 test('HTML, state and CSS use the fast pace', () => {
-  assert.equal(resolvePace(text('<button onclick={uploadImage} disabled={!selectedFile}>\n  Upload\n</button>')), 'fast');
-  assert.equal(resolvePace(text('<button onclick={() => deleteImage(item.pathname)}>Delete</button>')), 'fast');
-  assert.equal(resolvePace(text("let error = $state('');\nlet images = $state<GalleryImage[]>([]);")), 'fast');
-  assert.equal(resolvePace(text('type GalleryImage = {\n  url: string;\n};')), 'fast');
-  assert.equal(resolvePace(text('  article img,\n  article video {')), 'fast');
+  assert.equal(resolvePace(text('<button onclick="saveItem()" disabled>\n  Save\n</button>')), 'fast');
+  assert.equal(resolvePace(text('<button onclick="removeItem(item.id)">Delete</button>')), 'fast');
+  assert.equal(resolvePace(text("let error = '';\nlet items: Item[] = [];")), 'fast');
+  assert.equal(resolvePace(text('type Item = {\n  id: string;\n};')), 'fast');
+  assert.equal(resolvePace(text('  article h2,\n  article p {')), 'fast');
   assert.equal(resolvePace(text('.error {\n  color: #b42318;\n}')), 'fast');
 });
 

@@ -37,13 +37,9 @@ jobs:
       - name: Validate all example presentations (dry run + final directory)
         run: npm run validate:examples
       - name: Full replay, LF
-        run: |
-          node scripts/replay-example.js examples/basic-typescript --eol=lf --scenario
-          node scripts/replay-example.js examples/vercel-blob --eol=lf --scenario
+        run: node scripts/replay-example.js examples/basic-typescript --eol=lf --scenario
       - name: Full replay, CRLF
-        run: |
-          node scripts/replay-example.js examples/basic-typescript --eol=crlf
-          node scripts/replay-example.js examples/vercel-blob --eol=crlf
+        run: node scripts/replay-example.js examples/basic-typescript --eol=crlf
       - name: Secret scan
         run: npm run scan
 

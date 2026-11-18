@@ -26,14 +26,14 @@ async function main(): Promise<void> {
   const root = path.resolve(__dirname, '..', '..', '..');
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'blc-integration-'));
   const workspace = path.join(temp, 'workspace');
-  for (const name of ['basic-typescript', 'vercel-blob']) {
+  for (const name of ['basic-typescript']) {
     const example = path.join(root, 'examples', name);
     copyTree(path.join(example, '.better-live-coding'), path.join(workspace, name, '.better-live-coding'));
     copyTree(path.join(example, 'initial'), path.join(workspace, name, 'initial'));
     copyTree(path.join(example, 'final'), path.join(workspace, name, 'final'));
     copyTree(path.join(example, 'initial'), path.join(workspace, name, 'practice'));
     // A secret that must never be read or modified.
-    fs.writeFileSync(path.join(workspace, name, 'practice', '.env.local'), 'BLOB_READ_WRITE_TOKEN=never-read-me\n');
+    fs.writeFileSync(path.join(workspace, name, 'practice', '.env.local'), 'API_TOKEN=never-read-me\n');
     const config = path.join(workspace, name, '.better-live-coding', 'presentation.json');
     const data = JSON.parse(fs.readFileSync(config, 'utf8'));
     delete data.$schema;
@@ -65,7 +65,7 @@ async function main(): Promise<void> {
     )
   );
   let exitCode = 0;
-  for (const name of ['basic-typescript', 'vercel-blob']) {
+  for (const name of ['basic-typescript']) {
     console.log(`
 === Integration: ${name} ===`);
     const code = await runTests({

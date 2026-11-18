@@ -112,11 +112,11 @@ test('a multi-operation step is one transaction', () => {
 
 test('non-linear file order: frontend → backend → frontend', () => {
   const definition = nonLinearPresentation();
-  const set = buildCheckpoints(definition, { 'page.svelte': PAGE_START, 'server.ts': SERVER_START }, {});
+  const set = buildCheckpoints(definition, { 'page.html': PAGE_START, 'server.ts': SERVER_START }, {});
   const order = set.steps.flatMap((flat) => flat.step.operations.map((operation) => operation.file));
-  assert.deepEqual(order, ['page.svelte', 'page.svelte', 'page.svelte', 'server.ts', 'server.ts', 'page.svelte']);
+  assert.deepEqual(order, ['page.html', 'page.html', 'page.html', 'server.ts', 'server.ts', 'page.html']);
   const final = set.states.at(-1)!;
-  assert.match(final['page.svelte']!, /<button onclick=\{upload\}>Upload<\/button>\n {2}\{#if error\}/);
+  assert.match(final['page.html']!, /<button onclick="upload\(\)">Upload<\/button>\n {2}<p class="error"><\/p>/);
   assert.match(final['server.ts']!, /^import \{ json \}/);
   // The call (button) is written before its implementation (function), as configured.
   assert.ok(set.steps.findIndex((flat) => flat.step.id === 'button') < set.steps.findIndex((flat) => flat.step.id === 'function'));

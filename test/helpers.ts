@@ -28,13 +28,13 @@ export function nonLinearPresentation(): Presentation {
           id: 'state',
           title: 'Define state',
           operations: [
-            { type: 'insertAfter', file: 'page.svelte', anchor: { text: '<script>' }, text: "\n  let file = $state(null);\n  let error = $state('');" }
+            { type: 'insertAfter', file: 'page.html', anchor: { text: '<script>' }, text: "\n  let file = null;\n  let error = '';" }
           ]
         },
         {
           id: 'button',
           title: 'Create the button',
-          operations: [{ type: 'replace', file: 'page.svelte', anchor: { text: '  <!-- ui -->' }, text: '  <button onclick={upload}>Upload</button>' }]
+          operations: [{ type: 'replace', file: 'page.html', anchor: { text: '  <!-- ui -->' }, text: '  <button onclick="upload()">Upload</button>' }]
         },
         {
           id: 'function',
@@ -42,7 +42,7 @@ export function nonLinearPresentation(): Presentation {
           operations: [
             {
               type: 'insertBefore',
-              file: 'page.svelte',
+              file: 'page.html',
               anchor: { text: '</script>' },
               text: "  async function upload() {\n    await fetch('/api', { method: 'POST' });\n  }\n"
             }
@@ -65,7 +65,7 @@ export function nonLinearPresentation(): Presentation {
           id: 'feedback',
           title: 'Show errors',
           operations: [
-            { type: 'insertAfter', file: 'page.svelte', anchor: { text: '<button onclick={upload}>Upload</button>' }, text: '\n  {#if error}<p>{error}</p>{/if}' }
+            { type: 'insertAfter', file: 'page.html', anchor: { text: '<button onclick="upload()">Upload</button>' }, text: '\n  <p class="error"></p>' }
           ]
         }
       ]

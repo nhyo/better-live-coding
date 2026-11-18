@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadProject, validateProject } from '../src/presentation/project';
 import { generateCandidates } from '../src/presentation/candidates';
@@ -10,7 +9,7 @@ import { renderPreviewHtml, statusText } from '../src/presentation/preview';
 import { flattenSteps } from '../src/config/types';
 import { PAGE_START, ROOT, SERVER_START, nonLinearPresentation, tempDir, writeTree } from './helpers';
 
-const examples = ['basic-typescript', 'vercel-blob'];
+const examples = ['basic-typescript'];
 
 for (const name of examples) {
   test(`example ${name} validates, simulates every step and matches its final directory`, async () => {
@@ -21,22 +20,14 @@ for (const name of examples) {
   });
 }
 
-test('the Vercel Blob example uses CRLF files and both paces', async () => {
-  const { project } = await loadProject(path.join(ROOT, 'examples', 'vercel-blob'));
-  assert.ok(project?.checkpoints);
-  assert.deepEqual(Object.values(project!.checkpoints!.eol), ['crlf', 'crlf']);
-  const raw = fs.readFileSync(path.join(ROOT, 'examples', 'vercel-blob', 'initial', 'src', 'routes', '+page.svelte'), 'utf8');
-  assert.ok(raw.includes('\r\n'), 'fixture is checked out with CRLF (.gitattributes)');
-});
-
 function fixture(definition = nonLinearPresentation(), extra: Record<string, string> = {}) {
   const root = tempDir();
   definition.workspace = { workingDirectory: 'work', initialDirectory: 'start', finalDirectory: 'end', ...definition.workspace };
   writeTree(root, {
     '.better-live-coding/presentation.json': JSON.stringify(definition),
-    'start/page.svelte': PAGE_START,
+    'start/page.html': PAGE_START,
     'start/server.ts': SERVER_START,
-    'work/page.svelte': PAGE_START,
+    'work/page.html': PAGE_START,
     'work/server.ts': SERVER_START,
     ...extra
   });
@@ -61,7 +52,7 @@ test('validation reports missing and ambiguous anchors with chapter, step and fi
 });
 
 test('validation compares the final state and reports the first difference', async () => {
-  const root = fixture(nonLinearPresentation(), { 'end/page.svelte': 'different', 'end/server.ts': 'different' });
+  const root = fixture(nonLinearPresentation(), { 'end/page.html': 'different', 'end/server.ts': 'different' });
   const report = await validateProject(root);
   assert.equal(report.finalVerified, false);
   assert.ok(report.diagnostics.some((item) => /differs from end: first difference at line 1/.test(item.message)));
@@ -72,7 +63,7 @@ test('validation passes when the end directory matches', async () => {
   const root = fixture(definition);
   const { project } = await loadProject(root);
   const last = project!.checkpoints!.states.at(-1)!;
-  writeTree(root, { 'end/page.svelte': last['page.svelte']!, 'end/server.ts': last['server.ts']! });
+  writeTree(root, { 'end/page.html': last['page.html']!, 'end/server.ts': last['server.ts']! });
   const report = await validateProject(root);
   assert.equal(report.errors, 0);
   assert.equal(report.finalVerified, true);

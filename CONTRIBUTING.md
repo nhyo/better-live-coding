@@ -22,7 +22,7 @@ npm test
 npm run validate:schema
 npm run validate:examples
 npm run replay -- examples/basic-typescript --scenario
-npm run replay -- examples/vercel-blob --eol=lf
+npm run replay -- examples/basic-typescript --eol=crlf
 npm run scan
 npm run package
 ```
@@ -33,7 +33,7 @@ npm run package
 
 - **Keep the engine pure.** Nothing under `src/engine`, `src/config`, `src/checkpoints` or `src/presentation` may import
   `vscode`. VS Code specifics belong in `src/extension`.
-- **No project-specific content in runtime code.** Framework names, course names, file names and anchors belong in
+- **No project-specific content in runtime code.** Framework names, file names and anchors belong in
   examples only; a test enforces this.
 - **Never guess.** Missing or ambiguous anchors are errors. Do not add fuzzy matching.
 - **Line/column, not offsets.** Positions handed to editors must work for LF and CRLF documents.

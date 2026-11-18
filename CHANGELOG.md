@@ -24,7 +24,7 @@ All notable changes to this project are documented here. The format follows
   Generate Checkpoints, Generate Candidate Operations from Two Directories, Exit Presentation Mode.
 - Read-only sidebar preview of the presentation.
 - Candidate operation generator that compares two directories and produces a reviewable draft.
-- Examples: Basic TypeScript and Vercel Blob.
+- Example: Basic TypeScript.
 - Unit, headless replay and VS Code integration tests; CI on Windows and Linux; tag-based VSIX releases.
 
 [1.0.0]: https://github.com/nhyo/better-live-coding/releases/tag/v1.0.0

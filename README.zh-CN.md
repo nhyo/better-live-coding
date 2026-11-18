@@ -7,10 +7,7 @@ Better Live Coding 把任何项目变成 **可确定复现、可反复彩排的 
 输入下一个步骤——保留语法高亮、诊断、IntelliSense 和参数提示——可以跨任意多个文件，并按照真实开发者的顺序编写。
 Checkpoint 让你随时跳过、重来和恢复。
 
-扩展本身与技术栈无关：任何框架、课程或文件结构都不会写死在扩展中。
-
-> **截图 / GIF 占位。** 这里应放一段步骤运行的短录屏（状态栏 `Stage 2 · Step 3/6`、`Thinking · …` 停顿、
-> 文件切换和 IntelliSense）。录制方法见 [docs/media.md](docs/media.md)。
+扩展本身与技术栈无关：任何框架或文件结构都不会写死在扩展中。
 
 ## 功能
 
@@ -65,7 +62,7 @@ code --install-extension better-live-coding-1.0.0.vsix
     "finalDirectory": "solution",     // 可选：预期最终状态（用于验证）
     "newFileEol": "lf"                // createFile 新建文件的行尾
   },
-  "humanMode": { "enabled": true, "seed": "my-talk" },
+  "humanMode": { "enabled": true, "seed": "my-presentation" },
   "chapters": [
     {
       "id": "upload",
@@ -78,10 +75,10 @@ code --install-extension better-live-coding-1.0.0.vsix
           "operations": [
             {
               "type": "insertBefore",
-              "file": "src/App.svelte",
-              "anchor": { "text": "</script>" },
+              "file": "src/app.ts",
+              "anchor": { "text": "// upload" },
               "pace": "slow",
-              "text": ["  async function upload(file: File) {", "    // …", "  }", ""]
+              "text": ["async function upload(file: File) {", "  // …", "}", ""]
             }
           ]
         }
@@ -195,9 +192,6 @@ Human Mode 默认开启，且完全确定（基于 seed、步骤、操作和字�
 | 示例 | 展示内容 |
 | --- | --- |
 | [`examples/basic-typescript`](examples/basic-typescript) | 变量、函数、多文件、新建与删除文件、最后补错误处理、CRLF 文件、Human Mode、checkpoint 恢复 |
-| [`examples/vercel-blob`](examples/vercel-blob) | 文件选择、客户端上传、token endpoint、Gallery、删除、前后端非线性切换、快慢档、IntelliSense 触发点、CRLF、15 个语义步骤 |
-
-Vercel Blob 示例不包含任何凭据；运行应用需要你自己的 Blob store 和放在 `.env.local` 中的 token，而扩展从不读取该文件。
 
 ## 常见问题
 
@@ -219,7 +213,7 @@ npm run compile
 npm test                      # 单元测试（node:test）
 npm run validate:schema       # Ajv 编译 Schema 并校验示例
 npm run validate:examples     # 对每个示例执行完整的 Validate Presentation
-npm run replay -- examples/vercel-blob --scenario   # 无界面完整回放（含 Human Mode 计时）
+npm run replay -- examples/basic-typescript --scenario   # 无界面完整回放（含 Human Mode 计时）
 npm run test:integration      # 真实 VS Code 扩展宿主集成测试
 npm run scan                  # 敏感信息与本地路径扫描
 npm run package               # 打包 VSIX
